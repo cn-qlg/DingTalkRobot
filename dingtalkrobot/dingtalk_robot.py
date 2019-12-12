@@ -3,7 +3,6 @@ import time
 import hmac
 from hashlib import sha256
 import base64
-from urllib import parse
 import json
 
 
@@ -14,13 +13,24 @@ def is_null_or_blank_str(content):
     return False
 
 
+_ALWAYS_SAFE = frozenset(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                         b'abcdefghijklmnopqrstuvwxyz'
+                         b'0123456789'
+                         b'_.-~')
+
+
 def get_hmac_sha256_sign(secret_key, data):
     key = secret_key.encode("utf-8")
     secret_enc = data.encode("utf-8")
     value = hmac.new(key, secret_enc, digestmod=sha256).digest()
-    print(value)
     signature = base64.b64encode(value)
     return signature
+
+
+def quote_bytes(string):
+    """like urllib.parse.quote(), but return the lowercase."""
+    return ''.join([chr(char) if char in _ALWAYS_SAFE else '%{:02x}'.format(
+        char) for char in string])
 
 
 class DingTalkRobot(object):
@@ -35,7 +45,7 @@ class DingTalkRobot(object):
         if is_null_or_blank_str(msg):
             raise ValueError("Text类型，msg不能为空！")
         post_data = {"msgtype": "text", "at": {}}
-        post_data["text"] = msg
+        post_data["text"] = {"content": msg}
         if is_at_all:
             post_data["at"]["isAtAll"] = is_at_all
 
@@ -90,12 +100,12 @@ class DingTalkRobot(object):
 
         timestamp = int(round(time.time() * 1000))
         string_to_sign = f"{timestamp}\n{self.secret_key}"
-        sign = parse.quote_plus(get_hmac_sha256_sign(
+        sign = quote_bytes(get_hmac_sha256_sign(
             self.secret_key, string_to_sign))
         url = f"{self.webhook}&timestamp={timestamp}&sign={sign}"
-        print(url)
         headers = {'Content-Type': 'application/json; charset=utf-8'}
-        print(requests.post(url, json.dumps(post_data), headers=headers).text)
+        data = json.dumps(post_data)
+        print(requests.post(url, data, headers=headers).text)
 
 
 if __name__ == "__main__":
@@ -103,3 +113,10 @@ if __name__ == "__main__":
     secret = "secret"
     robot = DingTalkRobot(webhook, secret)
     robot.send_text("重要通知")
+    robot.send_link(
+        "重要通知", "钉钉官方文档", "https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq")
+    mark_down = "#### 杭州天气" + \
+        "> 9度，西北风1级，空气良89，相对温度73%\n\n" + \
+        "> ![screenshot](https://gw.alicdn.com/tfs/TB1ut3xxbsrBKNjSZFpXXcXhFXa-846-786.png)\n" + \
+        "> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
+    robot.send_markdown("杭州天气", mark_down)
