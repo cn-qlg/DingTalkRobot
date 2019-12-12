@@ -27,10 +27,10 @@ def get_hmac_sha256_sign(secret_key, data):
     return signature
 
 
-def quote_bytes(string):
+def quote_bytes(bts):
     """like urllib.parse.quote(), but return the lowercase."""
     return ''.join([chr(char) if char in _ALWAYS_SAFE else '%{:02x}'.format(
-        char) for char in string])
+        char) for char in bts])
 
 
 class DingTalkRobot(object):
