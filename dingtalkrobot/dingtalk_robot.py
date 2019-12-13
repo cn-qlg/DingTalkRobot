@@ -42,6 +42,13 @@ class DingTalkRobot(object):
         self.times = 0
 
     def send_text(self, msg, is_at_all=False, at_mobiles=None):
+        """推送text类型消息。          
+        :param msg: 消息内容
+        :param is_at_all: 是否@所有，可选 
+        :param at_mobiles: 被@人的手机号，可选
+        :return: 是否发送成功
+        :rtype: bool
+        """
         if is_null_or_blank_str(msg):
             raise ValueError("Text类型，msg不能为空！")
         post_data = {"msgtype": "text", "at": {}}
@@ -56,6 +63,14 @@ class DingTalkRobot(object):
         return self._post_msg(post_data)
 
     def send_link(self, title, text, msg_url, pic_url=None):
+        """推送link类型消息。          
+        :param title: 标题。
+        :param text: 消息内容。 
+        :param msg_url: 链接地址。
+        :param pic_url: 配图图片地址，可选。
+        :return: 是否发送成功
+        :rtype: bool
+        """
         if is_null_or_blank_str(title) or is_null_or_blank_str(text) or is_null_or_blank_str(msg_url):
             raise ValueError("Link类型，title、text、msg_url不能为空！")
         post_data = {
@@ -70,6 +85,14 @@ class DingTalkRobot(object):
         return self._post_msg(post_data)
 
     def send_markdown(self, title, text, is_at_all=False, at_mobiles=None):
+        """推送markdown类型消息。          
+        :param title: 标题。
+        :param text: 消息内容。 
+        :param is_at_all: 是否@所有，可选 
+        :param at_mobiles: 被@人的手机号，可选
+        :return: 是否发送成功
+        :rtype: bool
+        """
         if is_null_or_blank_str(title) or is_null_or_blank_str(text):
             raise ValueError("MarkDown类型，title、text不能为空！")
         post_data = {
