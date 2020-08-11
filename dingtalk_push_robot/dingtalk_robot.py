@@ -1,9 +1,10 @@
-import requests
-import time
-import hmac
-from hashlib import sha256
 import base64
+import hmac
 import json
+import time
+from hashlib import sha256
+
+import requests
 
 
 def is_null_or_blank_str(content):
@@ -33,11 +34,11 @@ def quote_bytes(bts):
         char) for char in bts])
 
 
-class DingTalkRobot(object):
+class DingTalkPushRobot(object):
     """钉钉自定义机器人"""
 
-    def __init__(self, webhook, secret_key):
-        self.webhook = webhook
+    def __init__(self, web_hook, secret_key):
+        self.web_hook = web_hook
         self.secret_key = secret_key
         self.times = 0
 
@@ -51,8 +52,7 @@ class DingTalkRobot(object):
         """
         if is_null_or_blank_str(msg):
             raise ValueError("Text类型，msg不能为空！")
-        post_data = {"msgtype": "text", "at": {}}
-        post_data["text"] = {"content": msg}
+        post_data = {"msgtype": "text", "at": {}, "text": {"content": msg}}
         if is_at_all:
             post_data["at"]["isAtAll"] = is_at_all
 
@@ -125,7 +125,7 @@ class DingTalkRobot(object):
         string_to_sign = f"{timestamp}\n{self.secret_key}"
         sign = quote_bytes(get_hmac_sha256_sign(
             self.secret_key, string_to_sign))
-        url = f"{self.webhook}&timestamp={timestamp}&sign={sign}"
+        url = f"{self.web_hook}&timestamp={timestamp}&sign={sign}"
         headers = {'Content-Type': 'application/json; charset=utf-8'}
         data = json.dumps(post_data)
         print(requests.post(url, data, headers=headers).text)
@@ -134,12 +134,12 @@ class DingTalkRobot(object):
 if __name__ == "__main__":
     webhook = "webhook"
     secret = "secret"
-    robot = DingTalkRobot(webhook, secret)
+    robot = DingTalkPushRobot(webhook, secret)
     robot.send_text("重要通知")
     robot.send_link(
         "重要通知", "钉钉官方文档", "https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq")
     mark_down = "#### 杭州天气" + \
-        "> 9度，西北风1级，空气良89，相对温度73%\n\n" + \
-        "> ![screenshot](https://gw.alicdn.com/tfs/TB1ut3xxbsrBKNjSZFpXXcXhFXa-846-786.png)\n" + \
-        "> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
+                "> 9度，西北风1级，空气良89，相对温度73%\n\n" + \
+                "> ![screenshot](https://gw.alicdn.com/tfs/TB1ut3xxbsrBKNjSZFpXXcXhFXa-846-786.png)\n" + \
+                "> ###### 10点20分发布 [天气](http://www.thinkpage.cn/) \n"
     robot.send_markdown("杭州天气", mark_down)
